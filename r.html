@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Register | FikaConnect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background: #f0fdf4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .register-container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+      text-align: center;
+    }
+
+    h2 {
+      color: #065f46;
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      margin: 0.8rem 0 0.3rem;
+      color: #047857;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    button {
+      background-color: #10b981;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #047857;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #10b981;
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: none;
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="register-container">
+    <h2>Create Your FikaConnect Account</h2>
+    <form id="registerForm">
+      <label for="regName">Name</label>
+      <input type="text" id="regName" placeholder="Your full name" required />
+
+      <label for="regEmailOrPhone">Email or Phone</label>
+      <input type="text" id="regEmailOrPhone" placeholder="email@example.com or +256..." required />
+
+      <label for="regPassword">Password</label>
+      <input type="password" id="regPassword" placeholder="Min. 6 characters" required />
+
+      <label for="regConfirm">Confirm Password</label>
+      <input type="password" id="regConfirm" placeholder="Repeat password" required />
+
+      <label for="regRole">Your Role</label>
+      <select id="regRole" required>
+        <option value="">Select Role</option>
+        <option value="driver">Driver</option>
+        <option value="transporter">Transporter</option>
+      </select>
+
+      <button type="submit">Create Account</button>
+    </form>
+  </div>
+
+  <div class="toast" id="toast">Status</div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDq3uO76nnqqPgPaFfXpOTEnFSXRqXneWU",
+      authDomain: "fika-connect-5f844.firebaseapp.com",
+      projectId: "fika-connect-5f844",
+      storageBucket: "fika-connect-5f844.appspot.com",
+      messagingSenderId: "124223307329",
+      appId: "1:124223307329:web:76c547b91dcd25205550c0"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    const toast = document.getElementById("toast");
+    const showToast = (msg) => {
+      toast.textContent = msg;
+      toast.style.display = "block";
+      setTimeout(() => toast.style.display = "none", 3000);
+    };
+
+    document.getElementById("registerForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById("regName").value.trim();
+      const input = document.getElementById("regEmailOrPhone").value.trim();
+      const pass = document.getElementById("regPassword").value;
+      const confirm = document.getElementById("regConfirm").value;
+      const role = document.getElementById("regRole").value;
+
+      if (!name || !input || !pass || !confirm || !role) {
+        showToast("Fill in all fields.");
+        return;
+      }
+
+      if (pass !== confirm) {
+        showToast("Passwords do not match.");
+        return;
+      }
+
+      const email = input.includes("@") ? input : `${input}@fikaconnect.com`;
+
+      auth.createUserWithEmailAndPassword(email, pass)
+        .then(() => {
+          localStorage.setItem("userName", name);
+          localStorage.setItem("userRole", role);
+          localStorage.setItem("isLoggedIn", "true");
+          showToast("Account created!");
+          setTimeout(() => location.href = "copilot codes.html.html", 1500);
+        })
+        .catch((err) => {
+          showToast("Error: " + err.message);
+        });
+    });
+  </script>
+</body>
+</html>

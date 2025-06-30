@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Vehicle | FikaConnect</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background: #f0fdf4;
+      padding: 1rem;
+    }
+    h2 {
+      text-align: center;
+      color: #047857;
+      margin-bottom: 1rem;
+    }
+    form {
+      background: white;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      margin-bottom: 1.5rem;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: 600;
+      color: #047857;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+      margin-top: 0.3rem;
+    }
+    button {
+      margin-top: 1rem;
+      background-color: #10b981;
+      color: white;
+      border: none;
+      padding: 0.7rem;
+      width: 100%;
+      font-size: 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #059669;
+    }
+    .vehicle-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .vehicle-card {
+      background: white;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .vehicle-card h3 {
+      margin: 0 0 0.3rem;
+      color: #047857;
+    }
+    .vehicle-card p {
+      margin: 0.2rem 0;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <h2>Manage Your Vehicles</h2>
+
+  <form id="vehicleForm">
+    <label for="truckType">Truck Type</label>
+    <input type="text" id="truckType" required placeholder="e.g., Lorry, Pickup" />
+
+    <label for="plateNumber">Plate Number</label>
+    <input type="text" id="plateNumber" required placeholder="e.g., UBA 123X" />
+
+    <label for="capacity">Capacity (Kg or Ton)</label>
+    <input type="text" id="capacity" required placeholder="e.g., 3000kg" />
+
+    <label for="availability">Availability</label>
+    <select id="availability">
+      <option value="Available">Available</option>
+      <option value="Unavailable">Unavailable</option>
+    </select>
+
+    <button type="submit">Save Vehicle</button>
+  </form>
+
+  <div class="vehicle-list" id="vehicleList">
+    <!-- Vehicle cards here -->
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+    import { getDatabase, ref, push, onValue, set } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDq3uO76nnqqPgPaFfXpOTEnFSXRqXneWU",
+      authDomain: "fika-connect-5f844.firebaseapp.com",
+      projectId: "fika-connect-5f844",
+      storageBucket: "fika-connect-5f844.appspot.com",
+      messagingSenderId: "124223307329",
+      appId: "1:124223307329:web:76c547b91dcd25205550c0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const userId = localStorage.getItem("userId");
+
+    const form = document.getElementById("vehicleForm");
+    const truckType = document.getElementById("truckType");
+    const plateNumber = document.getElementById("plateNumber");
+    const capacity = document.getElementById("capacity");
+    const availability = document.getElementById("availability");
+    const vehicleList = document.getElementById("vehicleList");
+
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      if (!userId) return alert("User not logged in");
+
+      const vehicleRef = push(ref(db, 'vehicles/' + userId));
+      set(vehicleRef, {
+        truckType: truckType.value.trim(),
+        plateNumber: plateNumber.value.trim(),
+        capacity: capacity.value.trim(),
+        availability: availability.value
+      }).then(() => {
+        form.reset();
+        alert("✅ Vehicle saved successfully!");
+      });
+    });
+
+    function loadVehicles() {
+      if (!userId) return;
+      const refPath = ref(db, 'vehicles/' + userId);
+      onValue(refPath, snapshot => {
+        vehicleList.innerHTML = "";
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          Object.values(data).forEach(v => {
+            const card = document.createElement("div");
+            card.className = "vehicle-card";
+            card.innerHTML = `
+              <h3>${v.truckType}</h3>
+              <p><strong>Plate:</strong> ${v.plateNumber}</p>
+              <p><strong>Capacity:</strong> ${v.capacity}</p>
+              <p><strong>Status:</strong> ${v.availability}</p>
+            `;
+            vehicleList.appendChild(card);
+          });
+        } else {
+          vehicleList.innerHTML = "<p>No vehicles registered yet.</p>";
+        }
+      });
+    }
+
+    loadVehicles();
+  </script>
+</body>
+</html>

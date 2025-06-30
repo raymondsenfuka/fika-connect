@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Truck Map & Live Tracking | FikaConnect</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap" async defer></script>
+</head>
+<style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f3f4f6;
+    }
+    .header {
+      background-color: #047857; /* emerald-700 */
+      color: white;
+      padding: 0.8rem 1.2rem;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    /* Logo */
+    .logo {
+      font-size: 1.9rem;
+      font-weight: bold;
+    }
+
+    /* Toggle Button */
+    .nav-toggle {
+      display: none;
+      font-size: 1.9rem;
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+
+    /* Navigation */
+    .nav {
+      display: flex;
+    }
+
+    .nav-links {
+      display: flex;
+      list-style: none;
+      gap: 1.5rem;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      color: #d1fae5;
+    }
+
+    /* Responsive (Mobile View) */
+    @media (max-width: 768px) {
+      .nav-toggle {
+        display: block;
+      }
+
+      .nav {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        left: 0;
+        background-color: #047857;
+        width: 100%;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        padding: 1rem 0;
+        z-index: 99;
+      }
+
+      .nav.nav-open {
+        display: flex;
+      }
+
+      .nav-links {
+        flex-direction: column;
+        gap: 1rem;
+
+
+      }
+    }
+
+    .map-page {
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .map-controls button {
+      margin: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background-color: #065f46;
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .map-controls button:hover {
+      background-color: #047857;
+    }
+
+    .footer {
+      margin-top: 2rem;
+      padding: 1rem;
+      text-align: center;
+      background-color: #e5e7eb;
+      font-size: 0.9rem;
+    }
+
+    .footer a {
+      color: #065f46;
+      text-decoration: none;
+      font-weight: bold;
+    }
+  </style>
+
+
+<body>
+    <header class="header">
+        <div class="container">
+          <div class="logo">FikaConnect</div>
+          <button class="nav-toggle" aria-label="Toggle menu">☰</button>
+          <nav class="nav">
+            <ul class="nav-links" id="navLinks">
+              <li id="loginItem"><a href="login page.html">Login</a></li>
+              <li id="registerItem"><a href="Regster page.html">Register</a></li>
+              <li id="logoutItem" style="display: none;"><a href="#" id="logoutLink">Logout</a></li>
+              <li><a href="about.html">About Us</a></li>
+            </ul>
+          </nav>
+        </div>
+      </header>
+
+  <main class="map-page">
+    <h2>Find Available Trucks & Track Your Goods</h2>
+
+    <div class="map-controls">
+      <button onclick="toggleView('available')">Search Available Trucks</button>
+      <button onclick="toggleView('tracking')">Live Tracking</button>
+    </div>
+
+    <div id="map" style="height: 500px; width: 100%; margin-top: 1rem;"></div>
+  </main>
+
+  <footer class="footer">
+    <p>Powered by Ssenfuka Tech Solutions | Contact: <a href="tel:+256706864020">+256706864020</a></p>
+  </footer>
+
+  <script>
+
+    // Toggle mobile menu
+  const toggle = document.querySelector('.nav-toggle');
+  const nav = document.querySelector('.nav');
+  toggle.addEventListener('click', () => {
+    nav.classList.toggle('nav-open');
+  });
+
+  
+    let map;
+    let activeMarkers = [];
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 0.3476, lng: 32.5825 }, // Kampala
+        zoom: 8,
+      });
+      loadAvailableTrucks();
+    }
+
+    function loadAvailableTrucks() {
+      clearMarkers();
+      const trucks = [
+        { lat: 0.3476, lng: 32.5825, title: "Truck A - Kampala" },
+        { lat: 0.3156, lng: 32.5656, title: "Truck B - Nakawa" },
+        { lat: 0.2856, lng: 32.5256, title: "Truck C - Entebbe" }
+      ];
+      trucks.forEach(truck => {
+        const marker = new google.maps.Marker({
+          position: { lat: truck.lat, lng: truck.lng },
+          map,
+          title: truck.title
+        });
+        activeMarkers.push(marker);
+      });
+    }
+
+    function loadLiveTracking() {
+      clearMarkers();
+      const goodsPath = [
+        { lat: 0.3476, lng: 32.5825 },
+        { lat: 0.3276, lng: 32.5725 },
+        { lat: 0.3076, lng: 32.5625 }
+      ];
+      const trackingLine = new google.maps.Polyline({
+        path: goodsPath,
+        geodesic: true,
+        strokeColor: "#10b981",
+        strokeOpacity: 1.0,
+        strokeWeight: 4
+      });
+      trackingLine.setMap(map);
+    }
+
+    function toggleView(view) {
+      if (view === 'available') {
+        loadAvailableTrucks();
+      } else if (view === 'tracking') {
+        loadLiveTracking();
+      }
+    }
+
+    function clearMarkers() {
+      activeMarkers.forEach(marker => marker.setMap(null));
+      activeMarkers = [];
+    }
+  </script>
+
+</body>
+</html>

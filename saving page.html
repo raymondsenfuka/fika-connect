@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+<main>
+    <!-- Truck Search -->
+    <section id="search">
+      <h2>Find Trucks</h2>
+      <input type="text" id="pickup" placeholder="Pickup Location" />
+      <input type="text" id="destination" placeholder="Destination" />
+      <select id="capacity">
+        <option value="">Select Capacity</option>
+        <option value="1">1 Ton</option>
+        <option value="3">3 Ton</option>
+        <option value="5">5 Ton</option>
+      </select>
+      <button onclick="searchTrucks()">Search</button>
+      <div id="results"></div>
+    </section>
+
+    <!-- Live GPS Map -->
+    <section id="map">
+      <h2>Live Truck Location</h2>
+      <div id="mapContainer"></div>
+    </section>
+
+    <!-- Booking System -->
+    <section id="booking">
+      <h2>Truck Booking</h2>
+      <form id="bookingForm">
+        <input type="text" id="bookingPickup" placeholder="Pickup Location" required />
+        <input type="text" id="bookingDestination" placeholder="Destination" required />
+        <input type="datetime-local" id="bookingTime" required />
+        <button type="submit">Confirm Booking</button>
+      </form>
+      <div id="confirmation"></div>
+    </section>
+
+    <!-- Collection Points -->
+    <section id="collection">
+      <h2>Goods Collection Points</h2>
+      <form id="collectionForm">
+        <input type="text" id="collectionLocation" placeholder="Collection Location" required />
+        <input type="text" id="ownerName" placeholder="Owner Name" required />
+        <button type="submit">Save Collection Point</button>
+      </form>
+      <ul id="collectionList"></ul>
+    </section>
+
+    <!-- Chatbot Assistant -->
+    <section id="chatbot">
+      <h2>Need Help?</h2>
+      <div id="chatWindow">
+        <div id="messages"></div>
+        <input type="text" id="chatInput" placeholder="Ask something..." />
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </section>
+
+    <!-- Reviews & Ratings -->
+    <section id="reviews">
+      <h2>User Reviews</h2>
+      <div id="reviewSection"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 FikaConnect. Built for Uganda.</p>
+  </footer>
+
+<!-- ================================ -->
+<!-- SECTION 2: CSS Styling -->
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f0fdf4;
+  margin: 0;
+  padding: 0;
+}
+header {
+  background: #065f46;
+  color: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+nav ul {
+  list-style: none;
+  display: flex;
+  gap: 1rem;
+}
+nav ul li a {
+  color: white;
+  text-decoration: none;
+}
+section {
+  padding: 1.5rem;
+  background: white;
+  margin: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+input, select, button {
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  width: 100%;
+  max-width: 400px;
+  display: block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+button {
+  background: #10b981;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+button:hover {
+  background: #059669;
+}
+#mapContainer {
+  width: 100%;
+  height: 300px;
+  background: #ddd;
+}
+#messages {
+  height: 150px;
+  overflow-y: scroll;
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  background: #f9f9f9;
+}
+</style>
+
+<!-- ================================ -->
+<!-- SECTION 3: JavaScript Logic -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then(() => {
+      console.log('Service Worker registered');
+    });
+  });
+}
+
+function initMap() {
+  const map = new google.maps.Map(document.getElementById("mapContainer"), {
+    center: { lat: 0.3476, lng: 32.5825 },
+    zoom: 8,
+  });
+
+  const truckMarker = new google.maps.Marker({
+    position: { lat: 0.3476, lng: 32.5825 },
+    map: map,
+    title: "Truck Location",
+  });
+}
+
+function searchTrucks() {
+  const pickup = document.getElementById('pickup').value;
+  const destination = document.getElementById('destination').value;
+  const capacity = document.getElementById('capacity').value;
+
+  const price = (Math.random() * 100).toFixed(2);
+  document.getElementById('results').innerHTML = `
+    <p>Truck found: ${pickup} ➜ ${destination} | Capacity: ${capacity} Ton</p>
+    <p>Estimated Price: UGX ${price}k</p>
+  `;
+}
+
+const bookingForm = document.getElementById('bookingForm');
+bookingForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const pickup = document.getElementById('bookingPickup').value;
+  const destination = document.getElementById('bookingDestination').value;
+  const time = document.getElementById('bookingTime').value;
+
+  document.getElementById('confirmation').innerHTML = `
+    <p>Booking Confirmed!</p>
+    <p>${pickup} ➜ ${destination} on ${new Date(time).toLocaleString()}</p>
+  `;
+});
+
+const collectionForm = document.getElementById('collectionForm');
+collectionForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const location = document.getElementById('collectionLocation').value;
+  const owner = document.getElementById('ownerName').value;
+  const item = document.createElement('li');
+  item.textContent = `${owner} - ${location}`;
+  document.getElementById('collectionList').appendChild(item);
+  collectionForm.reset();
+});
+
+function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value;
+  if (!msg) return;
+  const messages = document.getElementById('messages');
+  const userMsg = document.createElement('p');
+  userMsg.textContent = `You: ${msg}`;
+  messages.appendChild(userMsg);
+
+  const botReply = document.createElement('p');
+  botReply.textContent = `Bot: Thank you for your question. We'll get back to you.`;
+  messages.appendChild(botReply);
+  input.value = '';
+}
+</script>
+</body>
+</html>
+
+<!-- ================================ -->
+<!-- Service Worker File (sw.js) -->
+<!-- Save this in your project directory as sw.js -->
+<script type="text/plain" id="sw">
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open('fika-cache').then((cache) => {
+      return cache.addAll([
+        '/',
+        '/index.html',
+        '/styles.css',
+        '/app.js'
+      ]);
+    })
+  );
+});
+
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then((response) => {
+      return response || fetch(e.request);
+    })
+  );
+});
+</script>

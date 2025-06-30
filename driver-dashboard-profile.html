@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Driver Dashboard | FikaConnect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background: #f0fdf4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .dashboard {
+      max-width: 420px;
+      width: 100%;
+      padding: 1.5rem;
+    }
+
+    .profile-card {
+      text-align: center;
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .profile-card img {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #10b981;
+      margin-bottom: 1rem;
+    }
+
+    .upload-input {
+      display: block;
+      margin: 0 auto 1rem;
+    }
+
+    h2 {
+      margin: 0.3rem 0 0.2rem;
+      font-size: 1.4rem;
+    }
+
+    .status {
+      font-weight: bold;
+      margin-top: 0.2rem;
+      color: #047857;
+    }
+
+    .metrics {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1.2rem;
+      background: #e0f2f1;
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .toggle-container, .summary, .notifications {
+      margin-top: 1rem;
+      background: white;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+      vertical-align: middle;
+    }
+
+    .switch input { display: none; }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px; width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #10b981;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    .notification-bell {
+      font-size: 1.2rem;
+      float: right;
+      cursor: pointer;
+    }
+
+    .summary p {
+      margin: 0.3rem 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="dashboard">
+  <div class="profile-card">
+    <input type="file" class="upload-input" accept="image/*" onchange="previewPhoto(event)">
+    <img id="profilePic" src="https://www.w3schools.com/howto/img_avatar.png" alt="Profile Picture" />
+    <h2 id="driverName">Rider Name</h2>
+    <div class="status" id="driverStatus">Offline</div>
+  </div>
+
+  <div class="toggle-container">
+    <label for="driverModeToggle">Driver Mode</label>
+    <label class="switch">
+      <input type="checkbox" id="driverModeToggle" onchange="toggleDriverStatus()">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="metrics">
+    <div>
+      <strong>Total Deliveries</strong><br>18
+    </div>
+    <div>
+      <strong>Completion Rate</strong><br>94%
+    </div>
+  </div>
+
+  <div class="summary">
+    <p><strong>Truck Availability:</strong> ✅ Available</p>
+    <p><strong>Earnings (This Week):</strong> UGX 580,000</p>
+  </div>
+
+  <div class="notifications">
+    <span class="notification-bell" onclick="alert('You have 2 new delivery requests!')">🔔</span>
+    <p><strong>Notifications:</strong> Click bell to view</p>
+  </div>
+</div>
+
+<script>
+  function toggleDriverStatus() {
+    const status = document.getElementById("driverModeToggle").checked;
+    const label = document.getElementById("driverStatus");
+    label.textContent = status ? "Online" : "Offline";
+    label.style.color = status ? "#16a34a" : "#9ca3af";
+    localStorage.setItem("driverStatus", status ? "Online" : "Offline");
+  }
+
+  function previewPhoto(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const pic = document.getElementById("profilePic");
+      pic.src = URL.createObjectURL(file);
+    }
+  }
+
+  window.onload = () => {
+    const savedStatus = localStorage.getItem("driverStatus");
+    const toggle = document.getElementById("driverModeToggle");
+    if (savedStatus === "Online") {
+      toggle.checked = true;
+      toggleDriverStatus();
+    }
+  };
+</script>
+</body>
+</html>

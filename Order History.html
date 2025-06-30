@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Order History | FikaConnect</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background: #f0fdf4;
+      padding: 1rem;
+    }
+    h2 {
+      text-align: center;
+      color: #047857;
+      margin-bottom: 1rem;
+    }
+    .filters {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .filters select {
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+    .order-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .order-card {
+      background: white;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .order-card h3 { margin: 0 0 0.5rem; color: #047857; }
+    .order-card p { margin: 0.2rem 0; font-size: 0.95rem; }
+    .status {
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-top: 0.5rem;
+    }
+    .status.pending { color: #f59e0b; }
+    .status.intransit { color: #3b82f6; }
+    .status.delivered { color: #10b981; }
+    .order-card button {
+      margin-top: 0.5rem;
+      padding: 0.5rem 1rem;
+      background-color: #10b981;
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+    .order-card button:hover {
+      background-color: #059669;
+    }
+  </style>
+</head>
+<body>
+  <h2>Driver Order History</h2>
+
+  <div class="filters">
+    <select id="statusFilter">
+      <option value="all">All Statuses</option>
+      <option value="Pending">Pending</option>
+      <option value="In Transit">In Transit</option>
+      <option value="Delivered">Delivered</option>
+    </select>
+  </div>
+
+  <div class="order-list" id="orderList">
+    <!-- Orders loaded here -->
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+    import { getDatabase, ref, onValue, update } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDq3uO76nnqqPgPaFfXpOTEnFSXRqXneWU",
+      authDomain: "fika-connect-5f844.firebaseapp.com",
+      projectId: "fika-connect-5f844",
+      storageBucket: "fika-connect-5f844.appspot.com",
+      messagingSenderId: "124223307329",
+      appId: "1:124223307329:web:76c547b91dcd25205550c0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const userId = localStorage.getItem("userId");
+    const orderList = document.getElementById("orderList");
+    const statusFilter = document.getElementById("statusFilter");
+
+    let allOrders = [];
+
+    function renderOrders(orders) {
+      orderList.innerHTML = "";
+      if (orders.length === 0) {
+        orderList.innerHTML = "<p>No orders match the selected filter.</p>";
+        return;
+      }
+      orders.forEach((order) => {
+        const card = document.createElement("div");
+        card.className = "order-card";
+        const statusClass = (order.status || "Pending").toLowerCase().replace(/\s/g, '');
+        card.innerHTML = `
+          <h3>${order.cargoType || "Cargo"}</h3>
+          <p><strong>From:</strong> ${order.pickup || "-"}</p>
+          <p><strong>To:</strong> ${order.destination || "-"}</p>
+          <p><strong>Date:</strong> ${order.date || "N/A"}</p>
+          <p class="status ${statusClass}">${order.status || "Pending"}</p>
+          ${order.status !== "Delivered" ? `<button data-id="${order.id}">Mark as Delivered</button>` : ""}
+        `;
+        orderList.appendChild(card);
+
+        const btn = card.querySelector("button");
+        if (btn) {
+          btn.addEventListener("click", () => markAsDelivered(order.id));
+        }
+      });
+    }
+
+    function markAsDelivered(orderId) {
+      if (userId && orderId) {
+        const orderRef = ref(db, `orders/${userId}/${orderId}`);
+        update(orderRef, { status: "Delivered" });
+      }
+    }
+
+    function filterOrders() {
+      const selectedStatus = statusFilter.value;
+      if (selectedStatus === "all") {
+        renderOrders(allOrders);
+      } else {
+        const filtered = allOrders.filter(o => (o.status || "Pending") === selectedStatus);
+        renderOrders(filtered);
+      }
+    }
+
+    if (userId) {
+      const ordersRef = ref(db, 'orders/' + userId);
+      onValue(ordersRef, (snapshot) => {
+        allOrders = [];
+        if (snapshot.exists()) {
+          snapshot.forEach(child => {
+            allOrders.push({ id: child.key, ...child.val() });
+          });
+        }
+        filterOrders();
+      });
+    }
+
+    statusFilter.addEventListener("change", filterOrders);
+  </script>
+</body>
+</html>

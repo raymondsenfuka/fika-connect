@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>User Profile | FikaConnect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f0fdf4;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .profile-box {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      width: 95%;
+      max-width: 500px;
+      text-align: center;
+    }
+    img#avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+      margin-bottom: 1rem;
+    }
+    h2 { color: #047857; margin-bottom: 0.5rem; }
+    p { margin: 0.3rem 0; color: #374151; }
+    .edit-form {
+      display: none;
+      margin-top: 1rem;
+      text-align: left;
+    }
+    .edit-form label {
+      display: block;
+      margin-top: 0.6rem;
+      font-weight: 500;
+      color: #047857;
+    }
+    .edit-form input {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-top: 0.2rem;
+    }
+    .edit-form button, .profile-box button {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      margin-top: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .edit-form button:hover, .profile-box button:hover {
+      background: #047857;
+    }
+    .profile-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    #loader {
+      display: none;
+      margin-top: 1rem;
+      color: #047857;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="profile-box">
+    <input type="file" id="uploadImage" accept="image/*" style="display:none">
+    <img src="https://www.w3schools.com/howto/img_avatar.png" id="avatar" alt="Profile Picture" />
+    <h2 id="profileName">User</h2>
+    <p><strong>Role:</strong> <span id="profileRole">Transporter</span></p>
+    <p><strong>Email:</strong> <span id="profileEmail">-</span></p>
+    <p><strong>Phone:</strong> <span id="profilePhone">-</span></p>
+    <p><strong>Location:</strong> <span id="profileLocation">-</span></p>
+
+    <div class="profile-actions">
+      <button onclick="toggleEdit()">Edit Profile</button>
+      <button onclick="location.href='index.html'">🏠 Back to Home</button>
+    </div>
+
+    <form class="edit-form" id="editForm">
+      <label for="editName">Full Name</label>
+      <input type="text" id="editName" />
+
+      <label for="editEmail">Email</label>
+      <input type="email" id="editEmail" />
+
+      <label for="editPhone">Phone</label>
+      <input type="tel" id="editPhone" />
+
+      <label for="editLocation">Location</label>
+      <input type="text" id="editLocation" />
+      <button type="button" onclick="autoFillLocation()">📍 Use My Location</button>
+      <div id="loader">Detecting location...</div>
+
+      <button type="submit" id="saveButton">Save Changes</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+    import { getDatabase, ref, get, update } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js';
+    import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDq3uO76nnqqPgPaFfXpOTEnFSXRqXneWU",
+      authDomain: "fika-connect-5f844.firebaseapp.com",
+      projectId: "fika-connect-5f844",
+      storageBucket: "fika-connect-5f844.appspot.com",
+      messagingSenderId: "124223307329",
+      appId: "1:124223307329:web:76c547b91dcd25205550c0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const storage = getStorage(app);
+
+    window.onload = () => {
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        alert("No user logged in.");
+        return;
+      }
+
+      const avatar = document.getElementById("avatar");
+      const nameEl = document.getElementById("profileName");
+      const roleEl = document.getElementById("profileRole");
+      const emailEl = document.getElementById("profileEmail");
+      const phoneEl = document.getElementById("profilePhone");
+      const locationEl = document.getElementById("profileLocation");
+
+      const editName = document.getElementById("editName");
+      const editEmail = document.getElementById("editEmail");
+      const editPhone = document.getElementById("editPhone");
+      const editLocation = document.getElementById("editLocation");
+
+      const userRef = ref(db, 'users/' + userId);
+      get(userRef).then(snapshot => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          nameEl.textContent = data.fullName || "User";
+          roleEl.textContent = data.role || "-";
+          emailEl.textContent = data.email || "-";
+          phoneEl.textContent = data.phone || "-";
+          locationEl.textContent = data.location || "-";
+
+          if (data.profilePicURL) {
+            avatar.src = data.profilePicURL;
+          }
+
+          editName.value = data.fullName || "";
+          editEmail.value = data.email || "";
+          editPhone.value = data.phone || "";
+          editLocation.value = data.location || "";
+        } else {
+          alert("User profile not found.");
+        }
+      });
+
+      document.getElementById("editForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        document.getElementById("saveButton").disabled = true;
+
+        update(userRef, {
+          fullName: editName.value,
+          email: editEmail.value,
+          phone: editPhone.value,
+          location: editLocation.value
+        }).then(() => {
+          nameEl.textContent = editName.value;
+          emailEl.textContent = editEmail.value;
+          phoneEl.textContent = editPhone.value;
+          locationEl.textContent = editLocation.value;
+          toggleEdit(false);
+          showToast("Profile updated!");
+        }).finally(() => {
+          document.getElementById("saveButton").disabled = false;
+        });
+      });
+
+      avatar.onclick = () => document.getElementById("uploadImage").click();
+      document.getElementById("uploadImage").addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const imgRef = sRef(storage, `profilePics/${userId}`);
+          uploadBytes(imgRef, file).then(snapshot => getDownloadURL(snapshot.ref))
+            .then(url => {
+              avatar.src = url;
+              return update(userRef, { profilePicURL: url });
+            }).catch(err => {
+              console.error(err);
+              showToast("Upload failed.");
+            });
+        }
+      });
+    };
+
+    window.autoFillLocation = () => {
+      const loader = document.getElementById("loader");
+      loader.style.display = "block";
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const { latitude, longitude } = pos.coords;
+          document.getElementById("editLocation").value = `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`;
+          loader.stylestyle.display = "none"; }) .catch(() => { showToast("Unable to retrieve location."); loader.style.display = "none"; }); };
+
+window.toggleEdit = (show) => { const editForm = document.getElementById("editForm"); const isVisible = editForm.style.display === "block"; editForm.style.display = (show !== undefined) ? (show ? "block" : "none") : (!isVisible ? "block" : "none"); };
+
+window.showToast = (message) => { const toast = document.createElement("div"); toast.textContent = message; toast.style.position = "fixed"; toast.style.bottom = "20px"; toast.style.left = "50%"; toast.style.transform = "translateX(-50%)"; toast.style.background = "#10b981"; toast.style.color = "white"; toast.style.padding = "10px 20px"; toast.style.borderRadius = "8px"; toast.style.boxShadow = "0 2px 10px rgba(0,0,0,0.1)"; toast.style.zIndex = 9999; document.body.appendChild(toast); setTimeout(() => toast.remove(), 3000); }; </script> </body> </html>

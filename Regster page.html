@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register | FikaConnect</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #f0fdf4, #d1fae5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    .register-wrapper {
+      display: flex;
+      flex-direction: row;
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      max-width: 1000px;
+      width: 95%;
+    }
+
+    .register-image {
+      flex: 1;
+      background: url('https://images.unsplash.com/photo-1581091226825-0ef22b95c41d?fit=crop&w=800&q=80') no-repeat center center/cover;
+      position: relative;
+      display: block;
+    }
+
+    .register-image::after {
+      content: "Empowering Logistics. Connecting Communities.";
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      color: white;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 1rem;
+      font-size: 1.1rem;
+      border-radius: 0.5rem;
+    }
+
+    .register-container {
+      flex: 1;
+      padding: 2rem;
+    }
+
+    .register-container h2 {
+      color: #047857;
+      margin-bottom: 1.5rem;
+    }
+
+    .register-container span {
+      color: #10b981;
+      font-weight: bold;
+    }
+
+    .register-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .register-form input,
+    .register-form select {
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    .password-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .password-wrapper button {
+      border: none;
+      background: transparent;
+      color: #047857;
+      cursor: pointer;
+    }
+
+    .register-form button[type="submit"] {
+      background-color: #10b981;
+      color: white;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .register-form button[type="submit"]:hover {
+      background-color: #059669;
+    }
+
+    .login-prompt {
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    .login-prompt a {
+      color: #047857;
+      text-decoration: none;
+    }
+
+    .login-prompt a:hover {
+      text-decoration: underline;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #10b981;
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      display: none;
+      z-index: 1000;
+    }
+
+    @media (max-width: 768px) {
+      .register-wrapper {
+        flex-direction: column;
+        height: auto;
+      }
+
+      .register-image {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="register-wrapper">
+    <div class="register-image"></div>
+    <div class="register-container">
+      <h2 data-en="Create Your" data-sw="Tengeneza">Create Your <span>FikaConnect</span> Account</h2>
+      <form id="registerForm" class="register-form">
+        <input type="text" id="fullname" required placeholder="Full Name" />
+        <input type="tel" id="phone" required placeholder="Phone Number" />
+        <input type="email" id="email" required placeholder="Email Address" />
+
+        <select id="role" required>
+          <option value="">-- Select Role --</option>
+          <option value="driver">Truck Driver / Owner</option>
+          <option value="client">Goods Sender</option>
+        </select>
+
+        <div class="password-wrapper">
+          <input type="password" id="password" required placeholder="Password" />
+          <button type="button" onclick="togglePass('password', this)">Show</button>
+        </div>
+
+        <div class="password-wrapper">
+          <input type="password" id="confirmPassword" required placeholder="Confirm Password" />
+          <button type="button" onclick="togglePass('confirmPassword', this)">Show</button>
+        </div>
+
+        <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+
+        <button type="submit">Register</button>
+      </form>
+
+      <div class="login-prompt">
+        <p>Already have an account?</p>
+        <a href="login page.html">Login here</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toastMsg">Toast Message</div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDq3uO76nnqqPgPaFfXpOTEnFSXRqXneWU",
+      authDomain: "fika-connect-5f844.firebaseapp.com",
+      projectId: "fika-connect-5f844",
+      storageBucket: "fika-connect-5f844.appspot.com",
+      messagingSenderId: "124223307329",
+      appId: "1:124223307329:web:76c547b91dcd25205550c0",
+      measurementId: "G-YVS5C1XJFL"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    function togglePass(id, btn) {
+      const field = document.getElementById(id);
+      const type = field.type === "password" ? "text" : "password";
+      field.type = type;
+      btn.textContent = type === "password" ? "Show" : "Hide";
+    }
+
+    function showToast(message, duration = 3000) {
+      const toast = document.getElementById("toastMsg");
+      toast.textContent = message;
+      toast.style.display = "block";
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, duration);
+    }
+
+    document.getElementById("registerForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const fullName = document.getElementById("fullname").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const role = document.getElementById("role").value;
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+      const captchaResponse = grecaptcha.getResponse();
+
+      if (!captchaResponse) {
+        showToast("Please verify you're not a robot.");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        showToast("Passwords do not match.");
+        return;
+      }
+
+      auth.createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          return user.updateProfile({ displayName: fullName });
+        })
+        .then(() => {
+  showToast(`${fullName}, your account has been created successfully!`);
+  setTimeout(() => window.location.href = "home page.html", 3000);
+})
+
+
+        .catch((error) => {
+          showToast(error.message);
+        });
+    });
+  </script>
+</body>
+</html>

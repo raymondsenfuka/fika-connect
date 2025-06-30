@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Moving Truck | FikaConnect</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_VALID_GOOGLE_MAPS_API_KEY&callback=initMap" async defer></script>
+</head>
+<body>
+  <header class="header">
+    <h1>FikaConnect</h1>
+    <nav>
+      <ul>
+        <li><a href="testing.html">Home</a></li>
+        <li><a href="tel:+256706864020">Call</a></li>
+        <li><a href="https://wa.me/256706864020" target="_blank">WhatsApp</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="map-page">
+    <h2>Moving Truck Page</h2>
+
+    <section class="truck-form">
+      <h3>Truck Driver Info</h3>
+      <form id="movingTruckForm">
+        <input type="text" placeholder="Current Location" id="currentLocation" required />
+        <input type="text" placeholder="Destination Point" id="destinationLocation" required />
+        <select id="truckSize" required>
+          <option value="">Select Truck Size</option>
+          <option value="3">3 Tons</option>
+          <option value="5">5 Tons</option>
+          <option value="10">10 Tons</option>
+        </select>
+        <button type="submit">Activate Truck</button>
+      </form>
+    </section>
+
+    <section class="customer-search">
+      <h3>Search for Customers</h3>
+      <input type="text" placeholder="Search for pickup requests nearby..." id="customerSearch" />
+      <button onclick="searchCustomers()">Search</button>
+      <ul id="customerList"></ul>
+    </section>
+
+    <section>
+      <h3>Live GPS Tracking</h3>
+      <div id="map" style="height: 400px; width: 100%; margin-top: 1rem;"></div>
+      <button onclick="showAllActiveTrucks()" style="margin-top: 1rem; padding: 0.5rem 1rem;">Show Active Trucks</button>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Powered by Ssenfuka Tech Solutions | <a href="tel:+256706864020">Call Us</a> | <a href="https://wa.me/256706864020" target="_blank">Chat on WhatsApp</a></p>
+  </footer>
+
+  <script>
+    let map;
+    let activeTruckMarker;
+    let allActiveTrucks = [];
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 0.3476, lng: 32.5825 },
+        zoom: 8,
+      });
+    }
+
+    document.getElementById("movingTruckForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const current = document.getElementById("currentLocation").value;
+      const destination = document.getElementById("destinationLocation").value;
+      const truckSize = document.getElementById("truckSize").value;
+
+      alert(`Truck Activated from ${current} to ${destination}, Size: ${truckSize} Tons`);
+
+      // Simulate truck GPS position
+      const simulatedLatLng = { lat: 0.3476 + Math.random() * 0.2, lng: 32.5825 + Math.random() * 0.2 };
+      if (activeTruckMarker) activeTruckMarker.setMap(null);
+      activeTruckMarker = new google.maps.Marker({
+        position: simulatedLatLng,
+        map: map,
+        title: `Active Truck (${truckSize} Tons)`
+      });
+      allActiveTrucks.push(activeTruckMarker);
+      map.setCenter(simulatedLatLng);
+    });
+
+    function showAllActiveTrucks() {
+      allActiveTrucks.forEach(marker => marker.setMap(null));
+      allActiveTrucks = [];
+
+      // Simulate 3 random trucks
+      const trucks = [
+        { lat: 0.35, lng: 32.58, title: "Truck A (3 Tons)" },
+        { lat: 0.36, lng: 32.59, title: "Truck B (5 Tons)" },
+        { lat: 0.37, lng: 32.60, title: "Truck C (10 Tons)" },
+      ];
+
+      trucks.forEach(truck => {
+        const marker = new google.maps.Marker({
+          position: { lat: truck.lat, lng: truck.lng },
+          map: map,
+          title: truck.title,
+        });
+        allActiveTrucks.push(marker);
+      });
+    }
+
+    function searchCustomers() {
+      const search = document.getElementById("customerSearch").value.toLowerCase();
+      const customers = [
+        { name: "John", from: "Kampala", to: "Masaka", weight: 3 },
+        { name: "Sarah", from: "Entebbe", to: "Mukono", weight: 5 },
+        { name: "Ali", from: "Nansana", to: "Lugazi", weight: 2 }
+      ];
+      const filtered = customers.filter(c => c.from.toLowerCase().includes(search));
+      const list = document.getElementById("customerList");
+      list.innerHTML = "";
+      filtered.forEach(c => {
+        const item = document.createElement("li");
+        item.innerHTML = `${c.name}: ${c.from} → ${c.to} (${c.weight} tons)`;
+        list.appendChild(item);
+      });
+    }
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f3f4f6;
+    }
+
+    .header {
+      background-color: #10b981;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+    }
+
+    .header nav ul {
+      list-style: none;
+      display: flex;
+      gap: 1rem;
+      margin: 0;
+    }
+
+    .header nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    main {
+      padding: 1rem;
+    }
+
+    .truck-form,
+    .customer-search {
+      margin: 1rem auto;
+      max-width: 600px;
+      background: white;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    form input,
+    form select,
+    form button,
+    .customer-search input,
+    .customer-search button {
+      width: 100%;
+      margin: 0.5rem 0;
+      padding: 0.75rem;
+      font-size: 1rem;
+    }
+
+    form button,
+    .customer-search button {
+      background-color: #065f46;
+      color: white;
+      border: none;
+      border-radius: 0.3rem;
+      cursor: pointer;
+    }
+
+    .footer {
+      margin-top: 2rem;
+      padding: 1rem;
+      text-align: center;
+      background-color: #e5e7eb;
+      font-size: 0.9rem;
+    }
+
+    .footer a {
+      color: #065f46;
+      text-decoration: none;
+      font-weight: bold;
+    }
+  </style>
+</body>
+</html>

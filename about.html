@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login | FikaConnect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #e0f2f1, #a7f3d0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .login-container {
+      background-color: #ffffff;
+      padding: 2.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      width: 95%;
+      max-width: 450px;
+      text-align: center;
+    }
+
+    .login-container h2 {
+      margin-bottom: 1rem;
+      color: #065f46;
+    }
+
+    label {
+      display: block;
+      margin: 0.8rem 0 0.4rem;
+      text-align: left;
+      font-weight: 500;
+      color: #047857;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    button {
+      background-color: #10b981;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #047857;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #10b981;
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-container">
+  <h2>Login to FikaConnect</h2>
+  <form id="loginForm">
+    <label for="userName">Your Name</label>
+    <input type="text" id="userName" placeholder="e.g. Alex" required />
+
+    <label for="emailOrPhone">Phone or Email</label>
+    <input type="text" id="emailOrPhone" placeholder="+256700000000 or user@example.com" required />
+
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="Enter your password" required />
+
+    <label for="userRole">Your Role</label>
+    <select id="userRole" required>
+      <option value="">Select Role</option>
+      <option value="driver">Driver</option>
+      <option value="transporter">Transporter</option>
+    </select>
+
+    <button type="submit">Login</button>
+
+    <!-- Below the login button inside the form -->
+<div style="text-align:right; font-size:0.9rem;">
+    <a href="forgot-password.html" style="color:#047857;">Forgot password?</a>
+  </div>
+  
+  </form>
+  <!-- Below the form -->
+<p style="margin-top:1.5rem;">Don’t have an account?</p>
+<a href="register.html" style="display:inline-block; padding:0.6rem 1.2rem; background:#f0fdf4; color:#047857; border:1px solid #047857; border-radius:8px; text-decoration:none;">
+  ➕ Create Account
+</a>
+
+</div>
+
+<div class="toast" id="toast">Login success!</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDq3uO76nnqqPgPaFfXpOTEnFSXRqXneWU",
+    authDomain: "fika-connect-5f844.firebaseapp.com",
+    projectId: "fika-connect-5f844",
+    storageBucket: "fika-connect-5f844.appspot.com",
+    messagingSenderId: "124223307329",
+    appId: "1:124223307329:web:76c547b91dcd25205550c0"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+
+  const showToast = (msg) => {
+    const toast = document.getElementById("toast");
+    toast.textContent = msg;
+    toast.style.display = "block";
+    setTimeout(() => toast.style.display = "none", 3000);
+  };
+
+  document.getElementById("loginForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById("userName").value.trim();
+    const input = document.getElementById("emailOrPhone").value.trim();
+    const pass = document.getElementById("password").value;
+    const role = document.getElementById("userRole").value;
+
+    if (!name || !input || !pass || !role) {
+      showToast("Please fill in all fields.");
+      return;
+    }
+
+    const email = input.includes("@") ? input : `${input}@fikaconnect.com`;
+
+    auth.signInWithEmailAndPassword(email, pass)
+      .then(() => {
+        localStorage.setItem("userName", name);
+        localStorage.setItem("userRole", role);
+        localStorage.setItem("isLoggedIn", "true");
+        showToast("Login successful!");
+        setTimeout(() => window.location.href = "index.html", 1500);
+      })
+      .catch((err) => {
+        showToast("Error: " + err.message);
+      });
+  });
+</script>
+</body>
+</html>
